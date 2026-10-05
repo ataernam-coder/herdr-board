@@ -12,7 +12,7 @@ All notable changes to this project are documented here. The format is based on
 
 ### Fixed
 
-- fix(board-tui): New Task description scrolls with wrapped lines. Closes #114.
+- [#135](https://github.com/nelsonPires5/herdr-board/pull/135) fix: New Task description scrolls with wrapped lines (issue #114).
 
 ## [0.18.0] - 2026-09-23
 

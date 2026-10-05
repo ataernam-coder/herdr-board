@@ -488,7 +488,7 @@ fn draw_form_field(app: &App, form: &Form, fi: usize, row_area: Rect, f: &mut Fr
             let p = Paragraph::new(Text::from(rendered))
                 .style(val_style)
                 .wrap(Wrap { trim: false })
-                .scroll((scroll as u16, 0));
+                .scroll((scroll, 0));
             f.render_widget(p, value_area);
         }
         crate::forms::FieldKind::Text(ta) => {
@@ -1096,7 +1096,8 @@ mod tests {
             // Only CardCreate+Description uses the visual scroll; other
             // multiline fields keep the legacy logical path and full text.
             let long = "z".repeat(200);
-            let visual = description_visual_scroll(&[long.clone()], (0, 200), 40, 4, true);
+            let visual =
+                description_visual_scroll(std::slice::from_ref(&long), (0, 200), 40, 4, true);
             assert!(visual > 0);
             let mut col = crate::forms::Form::column_create(&[]);
             let idx = col
