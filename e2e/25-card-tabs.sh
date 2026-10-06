@@ -95,7 +95,9 @@ panes=json.loads(sys.argv[1]).get('panes',[])
 pane, tab, label, old_anchor=sys.argv[2:]
 assert next(p for p in panes if p.get('pane_id')==pane).get('tab_id') == tab
 owned=[p for p in panes if p.get('tab_id')==tab]
-anchors=[p for p in owned if p.get('label')==f"{label}-anchor" and not p.get('agent')]
+# The anchor stays stable as `card-<id>-anchor`, independent of the tab suffix.
+card_id=label.split()[0]
+anchors=[p for p in owned if p.get('label')==f"{card_id}-anchor" and not p.get('agent')]
 assert len(anchors)==1 and anchors[0].get('pane_id') != old_anchor
 assert pane != anchors[0].get('pane_id')
 PY
@@ -114,7 +116,9 @@ pane, user, old, label=sys.argv[2:]
 new=next(p for p in panes if p.get('pane_id')==pane).get('tab_id')
 assert new not in {user, old}
 owned=[p for p in panes if p.get('tab_id')==new]
-anchors=[p for p in owned if p.get('label')==f"{label}-anchor" and not p.get('agent')]
+# The anchor stays stable as `card-<id>-anchor`, independent of the tab suffix.
+card_id=label.split()[0]
+anchors=[p for p in owned if p.get('label')==f"{card_id}-anchor" and not p.get('agent')]
 assert len(anchors)==1 and pane != anchors[0].get('pane_id')
 PY
 ok "closed owned tab was recreated without selecting a duplicate-label user tab"

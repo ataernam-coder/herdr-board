@@ -553,9 +553,11 @@ fn managed_pi_invocation(
 /// model/effort/permission/session flag ordering exactly.
 ///
 /// No display-name flag is appended: the pinned claude CLI 2.1.209 argv
-/// (docs/protocol.md) exposes no verified `--name`/title flag, and Herdr's
-/// `agent.start {name}` already carries the agent name separately from the
-/// claude session. Card identity reaches the session through the run tab
+/// (docs/protocol.md), the checked-in fake fixture, and the Herdr 0.9.0 schema
+/// expose no `--name`/title spelling this change could verify, and real-Claude
+/// session naming was NOT verified — so no flag is invented here (fail closed).
+/// Herdr's `agent.start {name}` already carries the agent name separately from
+/// the claude session. Card identity reaches the session through the run tab
 /// label plus `BOARD_CARD_TITLE`/`BOARD_CARD_SHORT_NAME` in the run env.
 fn managed_claude_invocation(
     settings: &EffectiveSettings,
@@ -591,6 +593,10 @@ fn managed_claude_invocation(
 /// Substitute `{model}`/`{effort}`/`{permission_mode}` plus
 /// `{card_id}`/`{card_title}`/`{card_short_name}` in each template element.
 /// An element referencing an unset placeholder is dropped entirely.
+///
+/// Substitution is a single pass over the original template: replacement
+/// values are never re-scanned, so a card title like
+/// `Document {card_short_name}` stays literal instead of double-expanding.
 fn substitute_template(
     template: &[String],
     settings: &EffectiveSettings,
@@ -614,22 +620,50 @@ fn substitute_template(
         None => (None, None, None),
     };
 
+    let pairs: [(&str, Option<&str>); 6] = [
+        ("{model}", model),
+        ("{effort}", effort),
+        ("{permission_mode}", perm),
+        ("{card_id}", card_id),
+        ("{card_title}", card_title),
+        ("{card_short_name}", card_short),
+    ];
+
     let mut out = Vec::with_capacity(template.len());
     'items: for item in template {
-        let mut cur = item.clone();
-        for (ph, val) in [
-            ("{model}", model),
-            ("{effort}", effort),
-            ("{permission_mode}", perm),
-            ("{card_id}", card_id),
-            ("{card_title}", card_title),
-            ("{card_short_name}", card_short),
-        ] {
-            if cur.contains(ph) {
-                match val {
-                    Some(v) => cur = cur.replace(ph, v),
-                    None => continue 'items, // unset placeholder → drop element
+        // Unset placeholder present in the ORIGINAL template → drop element.
+        for (ph, val) in pairs.iter() {
+            if item.contains(ph) && val.is_none() {
+                continue 'items;
+            }
+        }
+        // Single pass over the original bytes; replacement text is copied
+        // verbatim and never re-scanned for placeholders.
+        let mut cur = String::with_capacity(item.len());
+        let bytes = item.as_bytes();
+        let mut i = 0;
+        while i < bytes.len() {
+            let mut matched: Option<&str> = None;
+            for (ph, val) in pairs.iter() {
+                if val.is_some() && item[i..].starts_with(ph) {
+                    matched = Some(ph);
+                    break;
                 }
+            }
+            if let Some(ph) = matched {
+                let val = pairs
+                    .iter()
+                    .find(|(p, _)| *p == ph)
+                    .and_then(|(_, v)| *v)
+                    .unwrap_or("");
+                cur.push_str(val);
+                i += ph.len();
+            } else {
+                // Copy one char (placeholders are ASCII, so byte-wise copy
+                // is safe for the non-matching prefix).
+                let ch = item[i..].chars().next().unwrap_or('\0');
+                cur.push(ch);
+                i += ch.len_utf8();
             }
         }
         out.push(cur);

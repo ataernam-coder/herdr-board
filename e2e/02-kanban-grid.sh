@@ -35,14 +35,14 @@ ids=sys.argv[3:]
 assert not any(t.get("label")=="kanban" for t in tabs)
 for n, card in enumerate(ids, start=1):
     # Run tabs carry the card short name (`card-<id> <slug>`); the anchor
-    # derives from that full tab label.
+    # stays stable as `card-<id>-anchor`, independent of that suffix.
     label=f"card-{card} grid-card-{n}"
     matches=[t for t in tabs if t.get("label")==label]
     assert len(matches)==1
     tab=matches[0]
     owned=[p for p in panes if p.get("tab_id")==tab["tab_id"]]
     assert len(owned)>=2
-    anchors=[p for p in owned if p.get("label")==f"{label}-anchor" and not p.get("agent")]
+    anchors=[p for p in owned if p.get("label")==f"card-{card}-anchor" and not p.get("agent")]
     assert len(anchors)==1
     assert any(re.match(rf"^card-{re.escape(card)}-execute(-r\d+)?$", p.get("label") or "") for p in owned)
 print(f"[ok] {len(ids)} cards use separate card-<id> tabs", file=sys.stderr)

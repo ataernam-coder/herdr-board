@@ -389,6 +389,64 @@ fn custom_harness_substitutes_card_placeholders() {
 }
 
 #[test]
+fn custom_harness_does_not_reexpand_replacement_values() {
+    // Regression: substitution is one pass over the original template.
+    // A card title that itself looks like a placeholder stays literal.
+    let mut config = Config::default();
+    config.harness.insert(
+        "fake".into(),
+        HarnessDef {
+            argv: vec!["run".into(), "{card_title}".into()],
+            ..Default::default()
+        },
+    );
+    let card = CardScope {
+        id: 7,
+        title: "Document {card_short_name}",
+    };
+    let inv = build_invocation_for_card(
+        "fake",
+        &config,
+        &settings(),
+        &SessionPlan::Mint,
+        None,
+        "p",
+        Some(card),
+    )
+    .unwrap();
+    assert_eq!(inv.argv, vec!["run", "Document {card_short_name}"]);
+
+    // A second placeholder in the SAME template element still expands from
+    // the original, while the title's inner placeholder-like text does not.
+    let mut config2 = Config::default();
+    config2.harness.insert(
+        "fake".into(),
+        HarnessDef {
+            argv: vec!["run".into(), "{card_title} {card_short_name}".into()],
+            ..Default::default()
+        },
+    );
+    let inv2 = build_invocation_for_card(
+        "fake",
+        &config2,
+        &settings(),
+        &SessionPlan::Mint,
+        None,
+        "p",
+        Some(card),
+    )
+    .unwrap();
+    let short = board_core::capability::card_short_name("Document {card_short_name}");
+    assert_eq!(
+        inv2.argv,
+        vec![
+            "run".to_string(),
+            format!("Document {{card_short_name}} {short}")
+        ]
+    );
+}
+
+#[test]
 fn custom_harness_drops_card_placeholders_without_card_scope() {
     let mut config = Config::default();
     config.harness.insert(

@@ -60,7 +60,7 @@ ktab = card_tab[0]["tab_id"]
 want = re.compile(rf"^card-{re.escape(card)}-execute(-r\d+)?$")
 owned = [p for p in panes if p.get("tab_id") == ktab]
 labels = [p.get("label") for p in owned]
-anchors = [p for p in owned if p.get("label") == f"{label}-anchor" and not p.get("agent")]
+anchors = [p for p in owned if p.get("label") == f"card-{card}-anchor" and not p.get("agent")]
 assert len(anchors) == 1
 match = next((l for l in labels if l and want.match(l)), None)
 if not match:

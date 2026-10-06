@@ -799,10 +799,34 @@ pub fn card_short_name(title: &str) -> String {
     slugify_words(&words, CARD_SLUG_MAX)
 }
 
+/// Stable anchor pane label for a card: `card-<id>-anchor` (e.g.
+/// `card-7-anchor`). Independent of the human-readable tab suffix: anchors
+/// never append `-anchor` to the full tab label, so a rename cannot orphan
+/// them.
+pub fn card_anchor_label(card_id: i64) -> String {
+    format!("card-{card_id}-anchor")
+}
+
+/// Derive the stable anchor label from a card tab label (`card-<id>` or
+/// `card-<id> <slug>`). The anchor is always `card-<id>-anchor`, never
+/// `<full-tab-label>-anchor` (which would yield the unstable
+/// `card-7 fix-login-redirect-anchor`). Falls back to `{tab_label}-anchor`
+/// for non-card labels (legacy `kanban` never reaches here).
+pub fn anchor_label_for_tab(tab_label: &str) -> String {
+    let first = tab_label.split_whitespace().next().unwrap_or(tab_label);
+    if let Some(id) = first.strip_prefix("card-") {
+        if !id.is_empty() && id.chars().all(|c| c.is_ascii_digit()) {
+            return format!("{first}-anchor");
+        }
+    }
+    format!("{tab_label}-anchor")
+}
+
 /// Display label for a card's durable run tab: `card-<id> <short-name>` (e.g.
 /// `card-7 fix-login-redirect`), or bare `card-<id>` when the title has no
 /// slug words. The `card-` prefix is load-bearing (ownership discovery keys on
-/// it); the suffix is display metadata only — pane labels and the rescue
+/// it); the suffix is display metadata only — pane labels, the stable
+/// [`card_anchor_label`]/[`anchor_label_for_tab`] anchor, and the rescue
 /// marker never include it, so a rename cannot orphan them.
 pub fn card_tab_label(card_id: i64, title: &str) -> String {
     let slug = card_short_name(title);
