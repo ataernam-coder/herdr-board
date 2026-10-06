@@ -464,7 +464,7 @@ tabs = json.loads(sys.argv[1]).get("tabs", [])
 panes = json.loads(sys.argv[2]).get("panes", [])
 rescued_tab, card, pane = sys.argv[3:6]
 match = [t for t in tabs if t.get("tab_id") == rescued_tab]
-assert len(match) == 1 and match[0].get("label") == f"card-{card}"
+assert len(match) == 1 and match[0].get("label") == f"card-{card} antigravity-rescue"
 owned = [p for p in panes if p.get("tab_id") == rescued_tab]
 assert len(owned) == 1 and owned[0]["pane_id"] == pane and owned[0].get("agent") == "agy"
 assert not any(p.get("label") == f"card-{card}-anchor" for p in owned)
