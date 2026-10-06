@@ -13,7 +13,9 @@ EXEC_ID="$(col_create '{"name":"Execute","trigger":"auto"}')"
 card_json="$($BOARD_BIN card new --title 'Per-card tabs' --description 'tab ownership' \
   --harness fake --space-kind workspace --space-ref "$WS_ID" --json)"
 CARD_ID="$(printf '%s' "$card_json" | jget id)"
-CARD_TAB_LABEL="card-$CARD_ID"
+# The board names the run tab after the card (`card-<id> <short-name>`); the
+# duplicate user tab below must use that exact label to test the collision.
+CARD_TAB_LABEL="card-$CARD_ID per-card-tabs"
 # A duplicate label is a user tab, not an ownership claim.
 USER_TAB="$(e2e_herdr_mutate -- tab create --workspace "$WS_ID" --label "$CARD_TAB_LABEL" --no-focus)"
 USER_TAB_ID="$(printf '%s' "$USER_TAB" | jget tab_id)"

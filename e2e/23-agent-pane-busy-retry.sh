@@ -129,7 +129,7 @@ python3 - "$PERSISTENT_PANES" "$PERSISTENT_CARD" <<'PY'
 import json, sys
 panes=json.loads(sys.argv[1]).get("panes",[])
 card=sys.argv[2]
-anchors=[p for p in panes if p.get("label") == f"card-{card}-anchor" and not p.get("agent")]
+anchors=[p for p in panes if p.get("label") == f"card-{card} persistent-pane-busy-anchor" and not p.get("agent")]
 assert len(anchors) == 1
 assert not any(card in (p.get("label") or "") and p not in anchors for p in panes)
 PY

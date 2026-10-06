@@ -1,9 +1,9 @@
 //! Harness capability catalog + run-pane naming.
 
 use board_core::capability::{
-    available_harnesses, capabilities_for, claude_capabilities, default_capabilities, efforts_for,
-    meta_for, pi_capabilities, resume_support_for, run_pane_name, run_pane_name_unique,
-    HarnessCapabilities, ResumeSupport,
+    available_harnesses, capabilities_for, card_short_name, card_tab_label, claude_capabilities,
+    default_capabilities, efforts_for, meta_for, pi_capabilities, resume_support_for,
+    run_pane_name, run_pane_name_unique, HarnessCapabilities, ResumeSupport,
 };
 use board_core::config::Config;
 use board_core::protocol::Effort;
@@ -207,6 +207,38 @@ fn pane_name_truncation_never_ends_on_dash() {
 fn pane_name_unique_adds_run_suffix() {
     assert_eq!(run_pane_name_unique(14, "Execute", 5), "card-14-execute-r5");
     assert_eq!(run_pane_name_unique(3, "", 2), "card-3-r2");
+}
+
+#[test]
+fn card_short_name_kebab_cases_first_four_words() {
+    assert_eq!(card_short_name("Fix login redirect"), "fix-login-redirect");
+    assert_eq!(
+        card_short_name("Ship the new onboarding flow today please"),
+        "ship-the-new-onboarding"
+    );
+}
+
+#[test]
+fn card_short_name_tolerates_noise_and_caps_length() {
+    assert_eq!(card_short_name("  Refactor   Auth!! "), "refactor-auth");
+    assert_eq!(card_short_name(""), "");
+    assert_eq!(card_short_name("***"), "");
+    let long = card_short_name("abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz");
+    assert!(long.chars().count() <= 32, "slug too long: {long}");
+    assert!(!long.ends_with('-'));
+    assert_eq!(long, "abcdefghijklmnopqrstuvwxyz-abcde");
+}
+
+#[test]
+fn card_tab_label_shows_short_name_after_id() {
+    assert_eq!(
+        card_tab_label(7, "Fix login redirect"),
+        "card-7 fix-login-redirect"
+    );
+    assert_eq!(card_tab_label(7, ""), "card-7");
+    assert_eq!(card_tab_label(7, "***"), "card-7");
+    // Ownership still keys on the `card-` prefix, never the label suffix.
+    assert!(card_tab_label(7, "Fix login").starts_with("card-"));
 }
 
 // -- HarnessMeta trait -----------------------------------------------------

@@ -10,6 +10,10 @@ All notable changes to this project are documented here. The format is based on
 
 - [#132](https://github.com/nelsonPires5/herdr-board/pull/132) feat: Offer only Herdr-installed harnesses in the card and column pickers, defaulting new cards to an installed harness (issue #111).
 
+### Changed
+
+- [#136](https://github.com/nelsonPires5/herdr-board/pull/136) feat: Name each card's run tab after the card, and offer card placeholders to custom harnesses (issue #134).
+
 ### Fixed
 
 - [#135](https://github.com/nelsonPires5/herdr-board/pull/135) fix: New Task description scrolls with wrapped lines (issue #114).
